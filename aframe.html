@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>360 Panorama - A-Frame</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <!-- A-Frame (built on Three.js) -->
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+</head>
+<body>
+
+  <button id="enterVR">Enter VR</button>
+  <div id="status">Checking VR support...</div>
+
+  <!-- The 3D scene. vr-mode-ui is off because we made our own button. -->
+  <a-scene vr-mode-ui="enabled: false">
+    <!-- The 360 photo, painted on the inside of a big sphere -->
+    <a-sky src="cowboy_town_saloon.jpg" rotation="0 -90 0"></a-sky>
+
+    <!-- The viewer's eyes. look-controls = mouse/touch drag + headset tracking -->
+    <a-camera position="0 0 0"></a-camera>
+  </a-scene>
+
+  <script>
+    const scene  = document.querySelector("a-scene");
+    const button = document.querySelector("#enterVR");
+    const status = document.querySelector("#status");
+
+    // 1. Check if VR is available (this is the WebXR API)
+    if (navigator.xr) {
+      navigator.xr.isSessionSupported("immersive-vr").then((ok) => {
+        status.textContent = ok ? "VR headset ready. Drag to look around.": "No VR headset found. Drag to look around.";
+      });
+    } else {
+      status.textContent = "WebXR not available. Drag to look around.";
+    }
+
+    // 2. Button: A-Frame starts/stops the WebXR session for us
+    button.addEventListener("click", async () => {
+      try {
+        if (scene.is("vr-mode")) {
+          await scene.exitVR();
+        } else {
+          await scene.enterVR();
+        }
+      } catch (error) {
+        status.textContent = "Could not start VR. Check browser and headset.";
+        console.error(error);
+      }
+    });
+
+    // 3. Update the button when VR starts/stops
+    scene.addEventListener("enter-vr", () => {
+      button.textContent = "Exit VR";
+    });
+    scene.addEventListener("exit-vr", () => {
+      button.textContent = "Enter VR";
+    });
+  </script>
+</body>
+</html>
